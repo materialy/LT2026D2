@@ -68,7 +68,12 @@ pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal}
 kbd{font-family:var(--mono);font-size:.85em;border:1.5px solid var(--line);border-bottom-width:3px;padding:0 .35em;background:var(--panel)}
 
 .links-top{display:flex;flex-wrap:wrap;gap:.5em;margin:.4em 0 1em}
-.links-top a{border:2px solid var(--ink);background:var(--panel);padding:.3em .8em;text-decoration:none;box-shadow:3px 3px 0 var(--ink)}
+.links-top a,.links-top button{font:inherit;font-weight:600;color:var(--ink);cursor:pointer;border:2px solid var(--ink);background:var(--panel);padding:.3em .8em;text-decoration:none;box-shadow:3px 3px 0 var(--ink)}
+
+.toc{display:flex;flex-wrap:wrap;gap:.35em .5em;margin:0 0 1.2em;font-size:.92rem}
+.toc a{border:1.5px solid var(--line);background:var(--panel);padding:.15em .6em;text-decoration:none;font-weight:600}
+.toc a .no{font-family:var(--mono);color:var(--margin);font-size:.85em;margin-right:.35em}
+h2[id]{scroll-margin-top:1em}
 
 .done{list-style:none;padding:0;display:grid;gap:.6em;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin:1.2em 0}
 .done li{border:2px solid var(--ink);background:var(--panel);padding:.8em 1em;max-width:none}
@@ -134,8 +139,21 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
   details .ans{padding-left:1.2em}
 }
 @media print{
-  body{background:none}
-  .sheet::before,.theme,.links-top{display:none}
+  /* zawsze jasny motyw na papierze (ciemny dałby jasny tekst na białej kartce) */
+  :root,:root[data-theme],:root:not([data-theme="light"]){
+    --paper:#FFFFFF; --grid:#DCE6F5; --ink:#1D2A5C; --ink-soft:#4A5785;
+    --margin:#D9433B; --marker:#FFE45C; --marker-ink:#1D2A5C; --code-bg:#EEF2FA; --line:#C5D3EA;
+    --ok:#1F8A5B; --bad:#C2372F; --panel:#FFFFFF;
+    --tag:#7A3FC2; --attr:#2563C9; --val:#1F8A5B;
+    color-scheme:light;
+  }
+  body{background:none;font-size:11pt;line-height:1.45;padding:0}
+  .sheet{max-width:none;padding:0}
+  .sheet::before,.theme,.links-top,.toc{display:none}
+  h1{font-size:24pt}
+  h2{font-size:16pt;margin:1.3em 0 .4em}
+  h2,h3{break-after:avoid}
+  pre{font-size:8.5pt}
   pre,.done li,.card,details{box-shadow:none;break-inside:avoid}
   details .ans{display:block}
 }
@@ -147,11 +165,12 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
 <main class="sheet">
   <p class="eyebrow">Projektowanie Stron Internetowych · ściąga</p>
   <h1>Linki w HTML</h1>
-  <p class="links-top"><a href="prezentacja.html">Prezentacja</a><a href="quiz.html">Quiz</a></p>
+  <p class="links-top"><a href="prezentacja.html">Prezentacja</a><a href="quiz.html">Quiz</a><button type="button" id="drukuj">Drukuj / PDF</button></p>
+<nav class="toc" aria-label="Spis sekcji"><a href="#s01"><span class="no">01</span>Budowa linku</a><a href="#s02"><span class="no">02</span>Dokąd może prowadzić link</a><a href="#s03"><span class="no">03</span>Dlaczego linki stoją w jednej linii</a><a href="#s04"><span class="no">04</span>Typowe błędy</a><a href="#s05"><span class="no">05</span>Słowniczek</a><a href="#s06"><span class="no">06</span>Sprawdź się</a><a href="#s07"><span class="no">07</span>Spróbuj sam</a></nav>
 <div class="card"><h3>Zanim zaczniesz</h3><ul class="check"><li>Element to znacznik otwierający, treść i znacznik zamykający (ten z ukośnikiem /).</li><li>Atrybut wpisujemy w znaczniku otwierającym jako nazwa=&quot;wartość&quot;.</li><li>Ścieżka względna liczy się od folderu, w którym leży strona, a ../ oznacza folder nadrzędny.</li><li>Ścieżka z dysku (np. C:/Users/…) działa tylko na Twoim komputerze.</li><li>Akapit p zawsze zaczyna się w nowej linii.</li></ul></div>
 <p class="lead">Link (odnośnik) to tekst lub obraz, który po kliknięciu przenosi w inne miejsce: na inną witrynę, na podstronę albo niżej na tej samej stronie. Tworzy go znacznik <code>&lt;a&gt;</code> z atrybutem <code>href</code>.</p>
 
-<h2><span class="no">01</span>Budowa linku</h2>
+<h2 id="s01"><span class="no">01</span>Budowa linku</h2>
 <pre><code><span class="t">&lt;a</span> <span class="a">href</span>=<span class="v">"https://pl.wikipedia.org/"</span><span class="t">&gt;</span>Wikipedia<span class="t">&lt;/a&gt;</span></code></pre>
 <div class="split">
   <div class="card"><h3>href = dokąd</h3><p>Adres strony albo ścieżka do pliku. Użytkownik go nie widzi, korzysta z niego przeglądarka.</p></div>
@@ -183,7 +202,7 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
 <span class="t">&lt;/body&gt;</span>
 <span class="t">&lt;/html&gt;</span></code></pre>
 
-<h2><span class="no">02</span>Dokąd może prowadzić link</h2>
+<h2 id="s02"><span class="no">02</span>Dokąd może prowadzić link</h2>
 <div class="tbl-wrap"><table>
   <thead><tr><th>Co wpisać w href</th><th>Dokąd prowadzi</th><th>Przykład</th></tr></thead>
   <tbody>
@@ -197,14 +216,14 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
 </table></div>
 <p>Ścieżki do podstron piszemy tak samo jak ścieżki do obrazów w <code>src</code>. Atrybut <code>target="_blank"</code> otwiera link w <mark>nowej karcie</mark>, a bez niego strona otwiera się w tej samej karcie.</p>
 
-<h2><span class="no">03</span>Dlaczego linki stoją w jednej linii</h2>
+<h2 id="s03"><span class="no">03</span>Dlaczego linki stoją w jednej linii</h2>
 <div class="split">
   <div class="card"><h3>Element blokowy</h3><p>Zaczyna się od nowej linii i zajmuje całą szerokość: <code>h1</code>–<code>h6</code>, <code>p</code>, <code>hr</code>.</p></div>
   <div class="card"><h3>Element liniowy</h3><p>Stoi w linii obok tekstu i sąsiadów: <code>a</code>, <code>img</code>.</p></div>
 </div>
 <p>Trzy linki wpisane w kodzie jeden pod drugim przeglądarka pokaże obok siebie: <code>Wikipedia Wolne Lektury Kontakt</code>. Żeby każdy był w osobnej linii, włóż go do osobnego akapitu <code>&lt;p&gt;</code>.</p>
 
-<h2><span class="no">04</span>Typowe błędy</h2>
+<h2 id="s04"><span class="no">04</span>Typowe błędy</h2>
 <ul class="check bad-list">
   <li><code>href="www.wp.pl"</code>: brak <code>https://</code>, więc przeglądarka szuka pliku o nazwie <code>www.wp.pl</code> w folderze strony.</li>
   <li><code>href="C:/Users/…/kontakt.html"</code>: ścieżka z dysku działa tylko na Twoim komputerze. Pisz <code>kontakt.html</code>.</li>
@@ -214,7 +233,7 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
 </ul>
 <div class="card warn"><h3>Pułapka</h3><p>Na serwerze <code>Kontakt.html</code> i <code>kontakt.html</code> to dwa różne pliki. Nazwy plików pisz małymi literami, bez spacji i polskich znaków.</p></div>
 
-<h2><span class="no">05</span>Słowniczek</h2>
+<h2 id="s05"><span class="no">05</span>Słowniczek</h2>
 <dl class="gloss">
   <dt>link (odnośnik)</dt><dd>klikalny tekst lub obraz, który przenosi w inne miejsce</dd>
   <dt><code>&lt;a&gt;</code></dt><dd>znacznik linku (od ang. anchor, kotwica)</dd>
@@ -230,7 +249,7 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
   <dt>komentarz</dt><dd><code>&lt;!-- … --&gt;</code>, czyli notatka w kodzie, której przeglądarka nie pokazuje</dd>
 </dl>
 
-<h2><span class="no">06</span>Sprawdź się</h2>
+<h2 id="s06"><span class="no">06</span>Sprawdź się</h2>
 <p>Odpowiedz w myślach, potem rozwiń.</p>
 <details><summary>Czym różni się <code>href</code> w <code>&lt;a&gt;</code> od <code>src</code> w <code>&lt;img&gt;</code>?</summary><div class="ans"><p><code>href</code> mówi, dokąd przejść po kliknięciu. <code>src</code> mówi, skąd wczytać obraz, który ma być widoczny od razu.</p></div></details>
 <details><summary>Jak sprawić, żeby każdy z trzech linków był w osobnej linii?</summary><div class="ans"><p>Włożyć każdy do osobnego akapitu: <code>&lt;p&gt;&lt;a …&gt;…&lt;/a&gt;&lt;/p&gt;</code>.</p></div></details>
@@ -241,7 +260,7 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
 <details><summary><span class="lvl">trudniejsze</span> Plik <code>galeria/zdjecia.html</code> ma link <code>href="kontakt.html"</code>. Który plik otworzy przeglądarka?</summary><div class="ans"><p><code>galeria/kontakt.html</code>, bo szuka w tym samym folderze, a takiego pliku nie ma. Poprawnie: <code>../kontakt.html</code>.</p></div></details>
 <details><summary><span class="lvl">trudniejsze</span> Porównaj <code>href="https://wolnelektury.pl/"</code> i <code>href="wolnelektury.pl"</code>.</summary><div class="ans"><p>Pierwszy prowadzi do witryny w internecie. Drugi to ścieżka względna: przeglądarka szuka pliku <code>wolnelektury.pl</code> obok strony i go nie znajdzie.</p></div></details>
 
-<h2><span class="no">07</span>Spróbuj sam</h2>
+<h2 id="s07"><span class="no">07</span>Spróbuj sam</h2>
 <ol class="steps">
   <li>Pobierz <a href="pliki/index.html" download>index.html</a> i <a href="pliki/kontakt.html" download>kontakt.html</a> do jednego folderu. W <code>index.html</code>, w sekcji „Linki”, dodaj dwa linki zewnętrzne, każdy w osobnym akapicie.
     <details class="hint"><summary>Rozwiązanie</summary><div class="ans"><pre><code><span class="t">&lt;p&gt;&lt;a</span> <span class="a">href</span>=<span class="v">"https://pl.wikipedia.org/"</span><span class="t">&gt;</span>Wikipedia<span class="t">&lt;/a&gt;&lt;/p&gt;</span>
@@ -276,6 +295,7 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
     root.dataset.theme = dark ? "light" : "dark";
     try { localStorage.setItem("cppkurs-theme", root.dataset.theme); } catch (e) {}
   });
+  document.getElementById("drukuj").addEventListener("click", function () { window.print(); });
   window.addEventListener("beforeprint", function () {
     document.querySelectorAll("details").forEach(function (d) { d.open = true; });
   });

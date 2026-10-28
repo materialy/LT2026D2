@@ -68,7 +68,12 @@ pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal}
 kbd{font-family:var(--mono);font-size:.85em;border:1.5px solid var(--line);border-bottom-width:3px;padding:0 .35em;background:var(--panel)}
 
 .links-top{display:flex;flex-wrap:wrap;gap:.5em;margin:.4em 0 1em}
-.links-top a{border:2px solid var(--ink);background:var(--panel);padding:.3em .8em;text-decoration:none;box-shadow:3px 3px 0 var(--ink)}
+.links-top a,.links-top button{font:inherit;font-weight:600;color:var(--ink);cursor:pointer;border:2px solid var(--ink);background:var(--panel);padding:.3em .8em;text-decoration:none;box-shadow:3px 3px 0 var(--ink)}
+
+.toc{display:flex;flex-wrap:wrap;gap:.35em .5em;margin:0 0 1.2em;font-size:.92rem}
+.toc a{border:1.5px solid var(--line);background:var(--panel);padding:.15em .6em;text-decoration:none;font-weight:600}
+.toc a .no{font-family:var(--mono);color:var(--margin);font-size:.85em;margin-right:.35em}
+h2[id]{scroll-margin-top:1em}
 
 .done{list-style:none;padding:0;display:grid;gap:.6em;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin:1.2em 0}
 .done li{border:2px solid var(--ink);background:var(--panel);padding:.8em 1em;max-width:none}
@@ -134,8 +139,21 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
   details .ans{padding-left:1.2em}
 }
 @media print{
-  body{background:none}
-  .sheet::before,.theme,.links-top{display:none}
+  /* zawsze jasny motyw na papierze (ciemny dałby jasny tekst na białej kartce) */
+  :root,:root[data-theme],:root:not([data-theme="light"]){
+    --paper:#FFFFFF; --grid:#DCE6F5; --ink:#1D2A5C; --ink-soft:#4A5785;
+    --margin:#D9433B; --marker:#FFE45C; --marker-ink:#1D2A5C; --code-bg:#EEF2FA; --line:#C5D3EA;
+    --ok:#1F8A5B; --bad:#C2372F; --panel:#FFFFFF;
+    --tag:#7A3FC2; --attr:#2563C9; --val:#1F8A5B;
+    color-scheme:light;
+  }
+  body{background:none;font-size:11pt;line-height:1.45;padding:0}
+  .sheet{max-width:none;padding:0}
+  .sheet::before,.theme,.links-top,.toc{display:none}
+  h1{font-size:24pt}
+  h2{font-size:16pt;margin:1.3em 0 .4em}
+  h2,h3{break-after:avoid}
+  pre{font-size:8.5pt}
   pre,.done li,.card,details{box-shadow:none;break-inside:avoid}
   details .ans{display:block}
 }
@@ -158,6 +176,13 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
 .score button{font:inherit;font-weight:600;border:2px solid var(--ink);background:var(--panel);color:var(--ink);padding:.45em 1em;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
 .score button.primary{background:var(--ink);color:var(--paper)}
 .score button[hidden]{display:none}
+.q .temat{margin:0 0 .3em;font-size:.85rem}
+.los[hidden]{display:none}
+.los .tematy{display:grid;gap:.2em;margin:.2em 0 .8em}
+.los label{display:flex;gap:.55em;align-items:baseline;cursor:pointer}
+.los input{accent-color:var(--margin);width:1.1em;height:1.1em;flex:none}
+.los select,.los button{font:inherit;font-weight:600;border:2px solid var(--ink);background:var(--panel);color:var(--ink);padding:.3em .6em}
+.los button{background:var(--ink);color:var(--paper);padding:.45em 1em;cursor:pointer;box-shadow:3px 3px 0 var(--margin);margin-top:.4em}
 </style>
 </head>
 <body>
@@ -167,6 +192,12 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
   <h1>Linki w HTML</h1>
   <p class="links-top"><a href="sciaga.html">Ściąga</a><a href="prezentacja.html">Prezentacja</a></p>
   <p class="lead">Kliknij odpowiedź, a od razu zobaczysz, czy jest dobra, i dlaczego. Na końcu możesz poprawić tylko pytania z błędem.</p>
+  <div class="card los" id="los" hidden>
+    <h3>Z których zagadnień?</h3>
+    <div class="tematy"></div>
+    <label>Liczba pytań: <select id="ile"></select></label>
+    <button type="button" id="losuj">Losuj nowy zestaw</button>
+  </div>
   <div id="quiz"></div>
   <div class="score" aria-live="polite"><span id="wynik"></span>
     <span class="btns"><button type="button" class="primary" id="popraw" hidden>Popraw błędne</button><button type="button" id="reset">Od nowa</button></span>
@@ -174,13 +205,14 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
 </main>
 <script>
 (function () {
-  const DANE = [{"pytanie": "Który znacznik tworzy klikalny link na stronie?", "odpowiedzi": ["<link>", "<a>", "<href>", "<url>"], "poprawna": 1, "wyjasnienie": "Link to element <a> (anchor). Znacznik <link> w head dołącza pliki, np. arkusz CSS, i nic nie pokazuje na stronie."}, {"pytanie": "Który atrybut podaje adres, do którego prowadzi link?", "odpowiedzi": ["src", "alt", "target", "href"], "poprawna": 3, "wyjasnienie": "Adres linku wpisujemy w href. Atrybut src ma obraz, a target mówi, gdzie otworzyć stronę."}, {"pytanie": "Co zobaczy użytkownik dla kodu <a href=\"kontakt.html\">Napisz do nas<\/a>?", "odpowiedzi": ["kontakt.html", "Cały kod linku", "Napisz do nas", "Nic, link jest niewidoczny"], "poprawna": 2, "wyjasnienie": "Na stronie widać tylko tekst linku między <a> a <\/a>. Adres z href jest ukryty."}, {"pytanie": "Dlaczego <a href=\"www.wp.pl\">Portal<\/a> nie otworzy portalu?", "odpowiedzi": ["Brak https://, szuka pliku w folderze strony", "Brakuje atrybutu target", "Adres musi kończyć się na .html", "Tekst linku jest za krótki"], "poprawna": 0, "wyjasnienie": "Bez https:// przeglądarka traktuje adres jak ścieżkę do pliku obok strony. Linki zewnętrzne zawsze piszemy z pełnym adresem."}, {"pytanie": "Strona leży w folderze galeria. Który href prowadzi do index.html folder wyżej?", "odpowiedzi": ["index.html", "galeria/index.html", "../index.html", "/galeria/index.html"], "poprawna": 2, "wyjasnienie": "../ oznacza folder nadrzędny. Sama nazwa index.html szukałaby pliku w folderze galeria."}, {"pytanie": "Co robi atrybut target=\"_blank\" w linku?", "odpowiedzi": ["Otwiera link w tej samej karcie", "Otwiera link w nowej karcie", "Usuwa podkreślenie linku", "Ukrywa link przed użytkownikiem"], "poprawna": 1, "wyjasnienie": "_blank otwiera stronę w nowej karcie. Bez atrybutu target link otwiera się w tej samej karcie."}, {"pytanie": "Dokąd przeniesie link <a href=\"#linki\">?", "odpowiedzi": ["Do pliku linki.html", "Do strony linki w internecie", "Do pierwszego linku na stronie", "Do elementu z id=\"linki\" na tej stronie"], "poprawna": 3, "wyjasnienie": "Znak # oznacza miejsce na tej samej stronie, czyli element z pasującym atrybutem id (kotwicę)."}, {"pytanie": "Trzy linki są w kodzie jeden pod drugim. Dlaczego przeglądarka pokazuje je obok siebie?", "odpowiedzi": ["a jest elementem liniowym", "Brakuje znacznika <\/a>", "Przeglądarka ma błąd", "Linki zawsze stoją w jednym rzędzie"], "poprawna": 0, "wyjasnienie": "Element a nie zaczyna nowej linii, a enter w kodzie liczy się jak spacja. Żeby rozdzielić linki, wkładamy każdy do osobnego p."}, {"pytanie": "Co się stanie, gdy po tekście linku zapomnisz o <\/a>?", "odpowiedzi": ["Link w ogóle się nie pokaże", "Dalsza treść strony też stanie się linkiem", "Przeglądarka usunie link", "Nic, <\/a> jest nieobowiązkowe"], "poprawna": 1, "wyjasnienie": "Bez <\/a> przeglądarka nie wie, gdzie kończy się link, więc kolejne teksty też są klikalne."}, {"pytanie": "Który href otworzy program pocztowy z gotowym adresem odbiorcy?", "odpowiedzi": ["email:filemon@example.com", "https://filemon@example.com", "mailto:filemon@example.com", "@filemon@example.com"], "poprawna": 2, "wyjasnienie": "Adres e-mail w linku poprzedzamy słowem mailto: — wtedy kliknięcie otwiera nową wiadomość."}, {"pytanie": "Link działa u autora, ale po wysłaniu strony na serwer już nie. Co było w href?", "odpowiedzi": ["kontakt.html", "C:/Users/uczen/strona/kontakt.html", "https://pl.wikipedia.org/", "#kontakt"], "poprawna": 1, "wyjasnienie": "Ścieżka z dysku C: istnieje tylko na komputerze autora. Do podstron używamy ścieżek względnych, np. kontakt.html."}];
+  const WSZYSTKIE = [{"pytanie": "Który znacznik tworzy klikalny link na stronie?", "odpowiedzi": ["<link>", "<a>", "<href>", "<url>"], "poprawna": 1, "wyjasnienie": "Link to element <a> (anchor). Znacznik <link> w head dołącza pliki, np. arkusz CSS, i nic nie pokazuje na stronie."}, {"pytanie": "Który atrybut podaje adres, do którego prowadzi link?", "odpowiedzi": ["src", "alt", "target", "href"], "poprawna": 3, "wyjasnienie": "Adres linku wpisujemy w href. Atrybut src ma obraz, a target mówi, gdzie otworzyć stronę."}, {"pytanie": "Co zobaczy użytkownik dla kodu <a href=\"kontakt.html\">Napisz do nas<\/a>?", "odpowiedzi": ["kontakt.html", "Cały kod linku", "Napisz do nas", "Nic, link jest niewidoczny"], "poprawna": 2, "wyjasnienie": "Na stronie widać tylko tekst linku między <a> a <\/a>. Adres z href jest ukryty."}, {"pytanie": "Dlaczego <a href=\"www.wp.pl\">Portal<\/a> nie otworzy portalu?", "odpowiedzi": ["Brak https://, szuka pliku w folderze strony", "Brakuje atrybutu target", "Adres musi kończyć się na .html", "Tekst linku jest za krótki"], "poprawna": 0, "wyjasnienie": "Bez https:// przeglądarka traktuje adres jak ścieżkę do pliku obok strony. Linki zewnętrzne zawsze piszemy z pełnym adresem."}, {"pytanie": "Strona leży w folderze galeria. Który href prowadzi do index.html folder wyżej?", "odpowiedzi": ["index.html", "galeria/index.html", "../index.html", "/galeria/index.html"], "poprawna": 2, "wyjasnienie": "../ oznacza folder nadrzędny. Sama nazwa index.html szukałaby pliku w folderze galeria."}, {"pytanie": "Co robi atrybut target=\"_blank\" w linku?", "odpowiedzi": ["Otwiera link w tej samej karcie", "Otwiera link w nowej karcie", "Usuwa podkreślenie linku", "Ukrywa link przed użytkownikiem"], "poprawna": 1, "wyjasnienie": "_blank otwiera stronę w nowej karcie. Bez atrybutu target link otwiera się w tej samej karcie."}, {"pytanie": "Dokąd przeniesie link <a href=\"#linki\">?", "odpowiedzi": ["Do pliku linki.html", "Do strony linki w internecie", "Do pierwszego linku na stronie", "Do elementu z id=\"linki\" na tej stronie"], "poprawna": 3, "wyjasnienie": "Znak # oznacza miejsce na tej samej stronie, czyli element z pasującym atrybutem id (kotwicę)."}, {"pytanie": "Trzy linki są w kodzie jeden pod drugim. Dlaczego przeglądarka pokazuje je obok siebie?", "odpowiedzi": ["a jest elementem liniowym", "Brakuje znacznika <\/a>", "Przeglądarka ma błąd", "Linki zawsze stoją w jednym rzędzie"], "poprawna": 0, "wyjasnienie": "Element a nie zaczyna nowej linii, a enter w kodzie liczy się jak spacja. Żeby rozdzielić linki, wkładamy każdy do osobnego p."}, {"pytanie": "Co się stanie, gdy po tekście linku zapomnisz o <\/a>?", "odpowiedzi": ["Link w ogóle się nie pokaże", "Dalsza treść strony też stanie się linkiem", "Przeglądarka usunie link", "Nic, <\/a> jest nieobowiązkowe"], "poprawna": 1, "wyjasnienie": "Bez <\/a> przeglądarka nie wie, gdzie kończy się link, więc kolejne teksty też są klikalne."}, {"pytanie": "Który href otworzy program pocztowy z gotowym adresem odbiorcy?", "odpowiedzi": ["email:filemon@example.com", "https://filemon@example.com", "mailto:filemon@example.com", "@filemon@example.com"], "poprawna": 2, "wyjasnienie": "Adres e-mail w linku poprzedzamy słowem mailto: — wtedy kliknięcie otwiera nową wiadomość."}, {"pytanie": "Link działa u autora, ale po wysłaniu strony na serwer już nie. Co było w href?", "odpowiedzi": ["kontakt.html", "C:/Users/uczen/strona/kontakt.html", "https://pl.wikipedia.org/", "#kontakt"], "poprawna": 1, "wyjasnienie": "Ścieżka z dysku C: istnieje tylko na komputerze autora. Do podstron używamy ścieżek względnych, np. kontakt.html."}], LOS = null;
+  let DANE = WSZYSTKIE, stan = [];   // stan: null = bez odpowiedzi, true = dobrze, false = źle
   const box = document.getElementById("quiz"), wynik = document.getElementById("wynik"), popraw = document.getElementById("popraw");
   const root = document.documentElement;
-  const stan = DANE.map(() => null);   // null = bez odpowiedzi, true = dobrze, false = źle
   const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
   const fmt = s => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
   function show() {
+    if (!DANE.length) { wynik.textContent = "Zaznacz co najmniej jedno zagadnienie."; popraw.hidden = true; return; }
     const done = stan.filter(x => x !== null).length, good = stan.filter(x => x === true).length, bad = stan.filter(x => x === false).length;
     wynik.textContent = done < DANE.length ? "Odpowiedziano: " + done + " z " + DANE.length + " · dobrze: " + good
       : "Wynik: " + good + " / " + DANE.length + (good === DANE.length ? " — komplet!" : "");
@@ -190,7 +222,7 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
   function question(i) {
     const q = DANE[i], el = document.createElement("section");
     el.className = "q";
-    el.innerHTML = "<h2><span class=\"no\">" + String(i + 1).padStart(2, "0") + "</span>" + fmt(q.pytanie) + "</h2><div class=\"opts\"></div>"
+    el.innerHTML = (q.temat ? "<p class=\"meta temat\">" + esc(q.temat) + "</p>" : "") + "<h2><span class=\"no\">" + String(i + 1).padStart(2, "0") + "</span>" + fmt(q.pytanie) + "</h2><div class=\"opts\"></div>"
       + "<p class=\"why\">" + fmt(q.wyjasnienie || "") + "</p>";
     const opts = el.querySelector(".opts");
     q.odpowiedzi.forEach((a, j) => {
@@ -228,7 +260,33 @@ summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var
     root.dataset.theme = dark ? "light" : "dark";
     try { localStorage.setItem("cppkurs-theme", root.dataset.theme); } catch (e) {}
   });
-  render(false);
+  function start(lista) { DANE = lista; stan = DANE.map(() => null); box.innerHTML = ""; render(false); }
+  if (LOS) {
+    // powtórka: losowy zestaw pytań z zaznaczonych zagadnień
+    const panel = document.getElementById("los"), lista = panel.querySelector(".tematy"), ile = document.getElementById("ile");
+    [...new Set(WSZYSTKIE.map(q => q.temat))].forEach(t => {
+      const l = document.createElement("label");
+      l.innerHTML = "<input type=\"checkbox\" checked><span>" + esc(t) + " <span class=\"meta\">(" + WSZYSTKIE.filter(q => q.temat === t).length + ")</span></span>";
+      l.querySelector("input").value = t;
+      lista.appendChild(l);
+    });
+    LOS.liczby.filter(n => n < WSZYSTKIE.length).concat([0]).forEach(n => {
+      const o = document.createElement("option");
+      o.value = n;
+      o.textContent = n ? n : "wszystkie (" + WSZYSTKIE.length + ")";
+      ile.appendChild(o);
+    });
+    ile.value = WSZYSTKIE.length > LOS.domyslnie ? LOS.domyslnie : 0;
+    const losuj = () => {
+      const wybrane = new Set([...lista.querySelectorAll("input:checked")].map(x => x.value));
+      const pula = WSZYSTKIE.filter(q => wybrane.has(q.temat));
+      for (let i = pula.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pula[i], pula[j]] = [pula[j], pula[i]]; }
+      start(pula.slice(0, Number(ile.value) || pula.length));
+    };
+    document.getElementById("losuj").addEventListener("click", losuj);
+    panel.hidden = false;
+    losuj();
+  } else start(WSZYSTKIE);
 })();
 </script>
 </body>
