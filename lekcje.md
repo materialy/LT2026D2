@@ -6,7 +6,7 @@ Najnowsze na górze. W folderze każdego zagadnienia: `sciaga.html`, `prezentacj
 
 Temat: Elementy składowe strony www
 
-- **Na lekcji:** [Listy w HTML](psi/05-listy-html/sciaga.html) · [Układ strony w HTML](psi/06-uklad-strony-html/sciaga.html)
+- **Na lekcji:** [Listy w HTML](psi/05-listy-html/sciaga.html) (poprawiono 29.10) · [Układ strony w HTML](psi/06-uklad-strony-html/sciaga.html) (poprawiono 29.10)
 - **Powtórz:** [Struktura dokumentu HTML](psi/01-struktura-dokumentu-html/sciaga.html) (poprawiono 28.10) · [Linki w HTML](psi/04-linki-html/sciaga.html) (poprawiono 28.10) · [Nagłówki i akapity w HTML](psi/02-naglowki-i-akapity/sciaga.html) (poprawiono 28.10)
 
 ## 2026-10-15 · Projektowanie Stron Internetowych
